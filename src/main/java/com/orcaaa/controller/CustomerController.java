@@ -2,6 +2,7 @@ package com.orcaaa.controller;
 
 import com.orcaaa.entity.Customer;
 import com.orcaaa.dtos.response.CustomerRespon;
+import com.orcaaa.exception.ErorsBindingResult;
 import com.orcaaa.exception.ResourceNotFoundException;
 import com.orcaaa.service.CustomerService;
 import jakarta.validation.Valid;
@@ -10,9 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/customers")
@@ -27,18 +25,8 @@ public class CustomerController {
     @PostMapping
     public ResponseEntity<CustomerRespon> addCustomer(@Valid @RequestBody Customer customer, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            List<String> errors = bindingResult.getFieldErrors().stream()
-                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                    .collect(Collectors.toList());
-
-            CustomerRespon errorResponse = CustomerRespon.builder()
-                    .message("Validation Failed")
-                    .data(errors)
-                    .build();
-
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(CustomerRespon.customerRespons("Validation Failed", ErorsBindingResult.erorsBindingResult(bindingResult)), HttpStatus.BAD_REQUEST);
         }
-
         try {
             log.info("Entering addCustomer method: {}", customer);
             return customerService.addCustomer(customer);
@@ -51,16 +39,7 @@ public class CustomerController {
     @PutMapping("/{customerId}")
     public ResponseEntity<CustomerRespon> editCustomer(@PathVariable String customerId, @Valid @RequestBody Customer customer, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            List<String> errors = bindingResult.getFieldErrors().stream()
-                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                    .collect(Collectors.toList());
-
-            CustomerRespon errorResponse = CustomerRespon.builder()
-                    .message("Validation Failed")
-                    .data(errors)
-                    .build();
-
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(CustomerRespon.customerRespons("Validation Failed", ErorsBindingResult.erorsBindingResult(bindingResult)), HttpStatus.BAD_REQUEST);
         }
 
         try {
@@ -85,7 +64,8 @@ public class CustomerController {
             throw ex;
         } catch (Exception e) {
             log.error("Error in getCustomerById method: {}", e.getMessage());
-            return null;
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
 }

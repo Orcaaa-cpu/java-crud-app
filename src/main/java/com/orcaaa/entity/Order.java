@@ -1,20 +1,16 @@
 package com.orcaaa.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.orcaaa.entity.Customer;
-import com.orcaaa.entity.Product;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "orders")
-@Data
+@Setter
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

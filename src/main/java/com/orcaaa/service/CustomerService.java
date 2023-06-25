@@ -33,19 +33,11 @@ public class CustomerService {
 
     public ResponseEntity<CustomerRespon> addCustomer(Customer customer) {
         validateCustomerRequest(customer);
-
         try {
             customerRepository.save(customer);
-            CustomerRespon customerRespon = CustomerRespon.builder()
-                    .data(customer)
-                    .message("Success Add Data Customer")
-                    .build();
-            return new ResponseEntity<>(customerRespon, HttpStatus.CREATED);
+            return new ResponseEntity<>( CustomerRespon.customerRespons("Success Add Data Customer", customer), HttpStatus.CREATED);
         } catch (Exception e) {
-            CustomerRespon errorRespon = CustomerRespon.builder()
-                    .message("Failed to add customer")
-                    .build();
-            return new ResponseEntity<>(errorRespon, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(CustomerRespon.customerRespons("Failed to add customer", null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -62,12 +54,7 @@ public class CustomerService {
 
             customerRepository.save(existingCustomer);
 
-            CustomerRespon customerRespon = CustomerRespon.builder()
-                    .message("Success Edit Data Customer")
-                    .data(existingCustomer)
-                    .build();
-
-            return new ResponseEntity<>(customerRespon, HttpStatus.OK);
+            return new ResponseEntity<>(CustomerRespon.customerRespons("Success Edit Data Customer", existingCustomer), HttpStatus.OK);
         } catch (ResourceNotFoundException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -80,12 +67,7 @@ public class CustomerService {
             Customer customer = customerRepository.findById(customerId)
                     .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + customerId));
 
-            CustomerRespon customerRespon = CustomerRespon.builder()
-                    .data(customer)
-                    .message("Success Get Data Customer")
-                    .build();
-
-            return new ResponseEntity<>(customerRespon, HttpStatus.OK);
+            return new ResponseEntity<>(CustomerRespon.customerRespons("Success Get Data Customer",customer), HttpStatus.OK);
         } catch (ResourceNotFoundException ex) {
             throw ex;
         } catch (Exception e) {

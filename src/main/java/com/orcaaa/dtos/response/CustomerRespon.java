@@ -16,4 +16,12 @@ public class CustomerRespon {
         this.message = message;
         this.data = data;
     }
+    public static CustomerRespon customerRespons(String str, Object obj){
+        CustomerRespon customerRespons = CustomerRespon.builder()
+                .data(obj)
+                .message(str)
+                .build();
+        return customerRespons;
+    }
+
 }

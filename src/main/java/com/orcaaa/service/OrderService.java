@@ -28,50 +28,49 @@ public class OrderService {
 
     @Transactional
     public ResponseEntity<OrderResponse> createOrder(OrderRequest orderRequest) {
-        String customerId = orderRequest.getCustomerId();
-        String productId = orderRequest.getProductId();
+        try {
+            String customerId = orderRequest.getCustomerId();
+            String productId = orderRequest.getProductId();
 
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + customerId));
+            Customer customer = customerRepository.findById(customerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + customerId));
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
 
-        BigDecimal productPrice = new BigDecimal(product.getProductPrice());
-        int quantity = orderRequest.getQuantity();
-        BigDecimal amount = productPrice.multiply(BigDecimal.valueOf(quantity));
+            BigDecimal productPrice = new BigDecimal(product.getProductPrice());
+            int quantity = orderRequest.getQuantity();
+            BigDecimal amount = productPrice.multiply(BigDecimal.valueOf(quantity));
 
-        Order order = Order.builder()
-                .orderId(UUID.randomUUID().toString())
-                .customer(customer)
-                .customerName(customer.getCustomerName())
-                .product(product)
-                .quantity(quantity)
-                .amount(amount)
-                .orderDate(LocalDateTime.now())
-                .build();
+            Order order = Order.builder()
+                    .orderId(UUID.randomUUID().toString())
+                    .customer(customer)
+                    .customerName(customer.getCustomerName())
+                    .product(product)
+                    .quantity(quantity)
+                    .amount(amount)
+                    .orderDate(LocalDateTime.now())
+                    .build();
 
-        // Simulate failure scenario
-        if (orderRequest.isFailureScenario()) {
-            throw new RuntimeException("Failed to create order.");
+            if (orderRequest.isFailureScenario()) {
+                throw new RuntimeException("Failed to create order.");
+            }
+
+            if (order.getQuantity() <= product.getStock() && product.getStock() != 0) {
+                product.setStock(product.getStock() - order.getQuantity());
+                productRepository.save(product);
+            } else {
+                return new ResponseEntity<>(OrderResponse.orderResponse( "Jumlah Stock Product Tidak Mencukupi.",HttpStatus.BAD_REQUEST.toString() ,null), HttpStatus.BAD_REQUEST);
+            }
+
+            orderRepository.save(order);
+
+            return new ResponseEntity<>(OrderResponse.orderResponse("Berhasil Order Product.", HttpStatus.OK.toString(),order), HttpStatus.CREATED);
+        } catch (ResourceNotFoundException ex){
+            throw ex;
+        }catch (Exception e) {
+            return new ResponseEntity<>(OrderResponse.orderResponse("Gagal Order Product.", HttpStatus.INTERNAL_SERVER_ERROR.toString(),null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        if ( order.getQuantity() <= product.getStock() && product.getStock() != 0 ){
-            product.setStock(product.getStock() - order.getQuantity());
-            productRepository.save(product);
-        }else{
-            OrderResponse orderResponse = new OrderResponse();
-            orderResponse.setMessage("Jumlah Stock Product Tidak Mencukupi.");
-            orderResponse.setStatus(HttpStatus.BAD_REQUEST.toString());
-
-                return new ResponseEntity<>(orderResponse, HttpStatus.BAD_REQUEST);
-        }
-
-        orderRepository.save(order);
-        OrderResponse orderResponse = new OrderResponse();
-        orderResponse.setMessage("Berhasil Order Product.");
-        orderResponse.setStatus(HttpStatus.OK.toString());
-        orderResponse.setOrder(order);
-
-        return new ResponseEntity<>(orderResponse, HttpStatus.CREATED);
     }
 }
+
